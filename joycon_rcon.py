@@ -34,12 +34,13 @@ logging.basicConfig(
 try:
     joycon_id = get_R_id()
     joycon = JoyCon(*joycon_id)
+    time.sleep(1)                                   # ensure connection is established, wait for ACK
     joycon_gyro = GyroTrackingJoyCon(*joycon_id)
     joycon_gyro.reset_orientation()
 
     state = joycon.get_status()
     pre_pos_x = joycon_gyro.pointer[0]
-    pre_pos_y = -joycon_gyro.pointer[1]  # note the sign flip
+    pre_pos_y = -joycon_gyro.pointer[1]             # note the sign flip
 
     # keep track of button states to detect a *new* press
     prev = {

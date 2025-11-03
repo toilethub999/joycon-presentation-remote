@@ -5,12 +5,33 @@
 PowerPoint Remote – Joy‑Con controlled laser pointer
 Author: T
 """
-
+# ------------------------------------------------------------
+# Import and Dependencies 
+# ------------------------------------------------------------
+ERR_IMPORT = False
 import sys
 import time
-from pyjoycon import JoyCon, get_R_id, GyroTrackingJoyCon
-import pyautogui
 import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] %(levelname)s – %(message)s",
+    datefmt="%H:%M:%S",
+)
+try:
+    from pyjoycon import JoyCon, get_R_id, GyroTrackingJoyCon
+except ImportError:
+    logging.error("❌  Module pyjoycon not found – run `pip install joycon-python hidapi pyglm`")
+    ERR_IMPORT = True
+try:
+    import pyautogui
+except ImportError:
+    logging.error("❌  Module pyautogui not found – run `pip install pyautogui`")
+    ERR_IMPORT = True
+if ERR_IMPORT:
+    logging.error("Missing Dependencies - please install the required modules and try again")
+    sys.exit()
+else:
+    logging.info("Modules successfully imported.")
 
 # ------------------------------------------------------------
 # Configuration – tweak these if you like
@@ -18,13 +39,6 @@ import logging
 MOVE_SPEED = 1500          # how fast the mouse pointer moves
 MODE_LASER = 0
 MODE_CURSOR = 1
-# ------------------------------------------------------------
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="[%(asctime)s] %(levelname)s – %(message)s",
-    datefmt="%H:%M:%S",
-)
 
 # ------------------------------------------------------------
 # Initialize Joy-Cons

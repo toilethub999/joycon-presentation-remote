@@ -10,8 +10,6 @@ import sys
 import time
 from pyjoycon import JoyCon, get_R_id, GyroTrackingJoyCon
 import pyautogui
-import win32com.client
-import pythoncom
 import logging
 
 # ------------------------------------------------------------
@@ -19,7 +17,7 @@ import logging
 # ------------------------------------------------------------
 MOVE_SPEED = 1500          # how fast the mouse pointer moves
 MODE_LASER = 0
-MODE_MOUSE = 1
+MODE_CURSOR = 1
 # ------------------------------------------------------------
 
 logging.basicConfig(
@@ -29,7 +27,7 @@ logging.basicConfig(
 )
 
 # ------------------------------------------------------------
-# 1)  Find the Joy‑Con and initialise gyroscope
+# Initialize Joy-Cons
 # ------------------------------------------------------------
 try:
     joycon_id = get_R_id()
@@ -54,30 +52,8 @@ except Exception as e:
     sys.exit(1)
 
 # ------------------------------------------------------------
-# 2)  Connect to the *running* PowerPoint instance
-# ------------------------------------------------------------
-try:
-    ppt = pythoncom.GetActiveObject("PowerPoint.Application")
-    logging.info("Using existing PowerPoint instance")
-except Exception:
-    # PowerPoint not running – start a new one
-    ppt = win32com.client.Dispatch("PowerPoint.Application")
-    logging.info("Started new PowerPoint instance")
-
-# Grab the SlideShow window – we expect that the user is already
-# running a slide‑show (F5).  If not, we will get an exception.
-try:
-    ss_view = ppt.ActivePresentation.SlideShowWindows(1).View
-    logging.info("Slide‑Show window found – we can toggle tools")
-except Exception:
-    logging.error(
-        "No SlideShow window detected.  Start a presentation with F5 "
-        "before using the remote."
-    )
-    sys.exit(1)
-
-# ------------------------------------------------------------
-# 3)  Helper functions to *toggle* the built‑in tools
+# Helper functions to *toggle* the built‑in tools
+# TODO: COM connection not working - try different library? Highlighter function without COM?
 # ------------------------------------------------------------
 def laser_on():
     """Turn the PowerPoint laser pointer on (the L key toggles it)."""
@@ -89,27 +65,15 @@ def laser_off():
     logging.info("Laser pointer OFF")
     pyautogui.press("l")  # press L again
 
-def highlighter_on():
-    """Start the PowerPoint highlighter (yellow annotation pen)."""
-    logging.info("Highlighter ON")
-    ss_view.StartHighlighter(ppt.constants.msoColorAutomatic)
-
-def highlighter_off():
-    """End any current annotation (including highlighter)."""
-    logging.info("Highlighter OFF")
-    ss_view.EndAnnotation()
-
 def toggle_mode():
-    """Called whenever SR is pressed – switches between laser & highlighter."""
-    global mode, ss_view
+    """Called whenever SR is pressed – switches between laser & cursor."""
+    global mode
     if mode == MODE_LASER:
-        # switch to highlighter
-        laser_off()          # make sure laser is not shown
-        highlighter_on()
-        mode = MODE_MOUSE
+        # switch to cursor
+        laser_off()
+        mode = MODE_CURSOR
     else:
         # switch to laser
-        highlighter_off()    # finish the annotation first
         laser_on()
         mode = MODE_LASER
 
@@ -168,7 +132,6 @@ while True:
     #  HOME – exit
     if state["home"] and not prev["home"]:
         logging.info("EXIT – cleaning up")
-        highlighter_off()  # make sure no annotation is left on the slide
         sys.exit(0)
 
     # Update button history

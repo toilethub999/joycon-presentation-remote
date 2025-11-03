@@ -39,13 +39,6 @@ try:
     state = joycon.get_status()
     pre_pos_x = joycon_gyro.pointer[0]
     pre_pos_y = -joycon_gyro.pointer[1]             # note the sign flip
-
-    # keep track of button states to detect a *new* press
-    prev = {
-        "x": 0, "b": 0, "y": 0, "a": 0,
-        "sr": 0, "plus": 0, "home": 0,
-        "r": 0, "zr": 0,
-    }
     mode = MODE_LASER
 except Exception as e:
     logging.error("Could not initialise Joy‑Con: %s", e)
@@ -95,49 +88,47 @@ while True:
     gyro = joycon_gyro.pointer
     cur_x, cur_y = gyro[0], -gyro[1]  # note the sign flip
     dx, dy = cur_x - pre_pos_x, cur_y - pre_pos_y
-    if state["right"] or state["zr"]:          # only move when pressed
+    if state["buttons"]["right"]["r"] or state["buttons"]["right"]["zr"]:          # only move when pressed
         pyautogui.moveRel(dx * MOVE_SPEED, dy * MOVE_SPEED, duration=0)
     pre_pos_x, pre_pos_y = cur_x, cur_y
 
     # ------------------------------------------------------------
-    # 3b)  Button handling – detect *new* presses
+    # Button handling – detect *new* presses
     # ------------------------------------------------------------
     #  X  – page‑up
-    if state["x"] and not prev["x"]:
+    if state["buttons"]["right"]["x"] and not prev["buttons"]["right"]["x"]:
         logging.info("Page‑up")
         pyautogui.press("pageup")
     #  B  – page‑down
-    if state["b"] and not prev["b"]:
+    if state["buttons"]["right"]["b"] and not prev["buttons"]["right"]["b"]:
         logging.info("Page‑down")
         pyautogui.press("pagedown")
     #  Y  – left click
-    if state["y"] and not prev["y"]:
+    if state["buttons"]["right"]["y"] and not prev["buttons"]["right"]["y"]:
         logging.info("Left click")
         pyautogui.click()
     #  A  – right click
-    if state["a"] and not prev["a"]:
+    if state["buttons"]["right"]["a"] and not prev["buttons"]["right"]["a"]:
         logging.info("Right click")
         pyautogui.click(button="right")
 
     #  SR – toggle mode (laser ↔ highlighter)
-    if state["sr"] and not prev["sr"]:
+    if state["buttons"]["right"]["sr"] and not prev["buttons"]["right"]["sr"]:
         logging.info("Mode toggle (SR pressed)")
         toggle_mode()
 
     #  PLUS – reset gyroscope orientation
-    if state["plus"] and not prev["plus"]:
+    if state["buttons"]["shared"]["plus"] and not prev["buttons"]["shared"]["plus"]:
         logging.info("Reset gyroscope orientation")
         joycon_gyro.reset_orientation()
 
     #  HOME – exit
-    if state["home"] and not prev["home"]:
+    if state["buttons"]["shared"]["home"] and not prev["buttons"]["shared"]["home"]:
         logging.info("EXIT – cleaning up")
         sys.exit(0)
 
     # Update button history
-    prev = {
-        k: state[k] for k in prev
-    }
+    prev = state
 
     # Small delay – you can raise this if you find the loop too fast
     time.sleep(0.02)

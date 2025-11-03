@@ -37,8 +37,7 @@ else:
 # Configuration – tweak these if you like
 # ------------------------------------------------------------
 MOVE_SPEED = 1500          # how fast the mouse pointer moves
-MODE_LASER = 0
-MODE_CURSOR = 1
+pyautogui.FAILSAFE = False
 
 # ------------------------------------------------------------
 # Initialize Joy-Cons
@@ -53,7 +52,6 @@ try:
     state = joycon.get_status()
     pre_pos_x = joycon_gyro.pointer[0]
     pre_pos_y = -joycon_gyro.pointer[1]             # note the sign flip
-    mode = MODE_LASER
 except Exception as e:
     logging.error("Could not initialise Joy‑Con: %s", e)
     sys.exit(1)
@@ -62,30 +60,10 @@ except Exception as e:
 # Helper functions to *toggle* the built‑in tools
 # TODO: COM connection not working - try different library? Highlighter function without COM?
 # ------------------------------------------------------------
-def laser_on():
-    """Turn the PowerPoint laser pointer on (the L key toggles it)."""
-    logging.info("Laser pointer ON")
-    pyautogui.press("l")  # keycode 'L' toggles the laser
 
-def laser_off():
-    """Turn the PowerPoint laser pointer off."""
-    logging.info("Laser pointer OFF")
-    pyautogui.press("l")  # press L again
-
-def toggle_mode():
-    """Called whenever SR is pressed – switches between laser & cursor."""
-    global mode
-    if mode == MODE_LASER:
-        # switch to cursor
-        laser_off()
-        mode = MODE_CURSOR
-    else:
-        # switch to laser
-        laser_on()
-        mode = MODE_LASER
 
 # ------------------------------------------------------------
-# 3)  Main loop – read the joystick, move the cursor, toggle tools
+# Main loop – read the joystick, move the cursor, toggle tools
 # ------------------------------------------------------------
 logging.info("Remote is now running.  Press HOME on the Joy‑Con to exit.")
 while True:
@@ -97,7 +75,7 @@ while True:
         continue
 
     # ------------------------------------------------------------
-    # 3a)  Gyroscope → mouse movement
+    # Gyroscope → mouse movement
     # ------------------------------------------------------------
     gyro = joycon_gyro.pointer
     cur_x, cur_y = gyro[0], -gyro[1]  # note the sign flip
@@ -125,24 +103,22 @@ while True:
     if state["buttons"]["right"]["a"] and not prev["buttons"]["right"]["a"]:
         logging.info("Right click")
         pyautogui.click(button="right")
-
-    #  SR – toggle mode (laser ↔ highlighter)
+    #  SR – toggle mode (laser <-> cursor)
     if state["buttons"]["right"]["sr"] and not prev["buttons"]["right"]["sr"]:
-        logging.info("Mode toggle (SR pressed)")
-        toggle_mode()
-
+        logging.info("Toggle Laser Pointer")
+        pyautogui.hotkey("ctrl","l")  # hotkey 'CTRL+L' toggles the laser
     #  PLUS – reset gyroscope orientation
     if state["buttons"]["shared"]["plus"] and not prev["buttons"]["shared"]["plus"]:
         logging.info("Reset gyroscope orientation")
         joycon_gyro.reset_orientation()
-
     #  HOME – exit
     if state["buttons"]["shared"]["home"] and not prev["buttons"]["shared"]["home"]:
         logging.info("EXIT – cleaning up")
+        pyautogui.press("esc")
         sys.exit(0)
 
     # Update button history
     prev = state
 
     # Small delay – you can raise this if you find the loop too fast
-    time.sleep(0.02)
+    # time.sleep(0.02)

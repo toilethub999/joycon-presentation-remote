@@ -84,10 +84,10 @@ while True:
         # Catch gyro pointer returning None error, temporarily using previous values
         logging.warning("Lost Gyro, using previous values. Try recalibrating Joy-Con.")
         cur_x, cur_y = pre_pos_x, pre_pos_y
-        
+
     dx, dy = cur_x - pre_pos_x, cur_y - pre_pos_y
     if state["buttons"]["right"]["r"] or state["buttons"]["right"]["zr"]:          # only move when pressed
-        pyautogui.moveRel(dx * MOVE_SPEED, dy * MOVE_SPEED, duration=0)
+        pyautogui.moveRel(dx * MOVE_SPEED, dy * MOVE_SPEED, duration=0, _pause=False)
     pre_pos_x, pre_pos_y = cur_x, cur_y
 
     # ------------------------------------------------------------
@@ -125,6 +125,3 @@ while True:
 
     # Update button history
     prev = state
-
-    # Small delay – you can raise this if you find the loop too fast
-    # time.sleep(0.02)
